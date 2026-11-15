@@ -8,6 +8,14 @@
     "owner": "The-Alphabet-Cartel",
     "versions": [
       {
+        "changelog": "## 5.1.1.2 (pbd)\r\n\r\nNew accounts are now named after the member's sign-in username, and members can set their own password for apps.\r\n\r\n### Added\r\n- **New account name claim** (OpenID provider setting). Names a new account from a claim such as `preferred_username`, while the username claim (for example `sub`) stays the key the account is linked by. With it set, a sign-in is never matched to an existing account by name.\r\n- **App password** on `/SSOViews/linking`. Accounts created by SSO can set a password once, so they can sign in to apps that only take a username and password. Minimum 8 characters. Later changes go through the normal Jellyfin profile page.\r\n\r\n### Changed\r\n- A brand-new account is taken to the self-service page after its first sign-in, to set that password.\r\n- If a sign-in is refused (for example, the account name is already taken), the page now says why instead of showing a blank screen.\r\n\r\n### Setup\r\nSet **New account name claim** to `preferred_username` on the provider, save, and restart Jellyfin.",
+        "checksum": "7f0a9c7ef79df4b00bb201b00dc8a54c",
+        "sourceUrl": "https://github.com/The-Alphabet-Cartel/jellyfin-plugin-sso/releases/download/v5.1.1.2/sso-authentication-pbd_5.1.1.2.zip",
+        "targetAbi": "12.0.0.0",
+        "timestamp": "2026-11-15T18:37:16Z",
+        "version": "5.1.1.2"
+      },
+      {
         "changelog": "Fix self-service account linking creating a new user instead of linking.",
         "checksum": "ee82c0cbef80f335d533d8dee2310108",
         "sourceUrl": "https://github.com/The-Alphabet-Cartel/jellyfin-plugin-sso/releases/download/v5.1.1.1/sso-authentication-pbd_5.1.1.1.zip",
