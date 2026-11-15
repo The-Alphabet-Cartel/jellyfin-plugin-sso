@@ -107,6 +107,8 @@
       "DefaultProviderDescription": "Provajder autentifikacije koji se dodeljuje nakon SSO prijave. Ostavite prazno da biste zadržali postojećeg provajdera. Uobičajena podrazumevana vrednost je Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider.",
       "DefaultUsernameClaimLabel": "Postavi podrazumevani claim korisničkog imena:",
       "DefaultUsernameClaimDescription": "OpenID claim koji se koristi kao Jellyfin korisničko ime. Ako nije podešen, podrazumevana vrednost je preferred_username.",
+      "NewUserNameClaimLabel": "New account name claim:",
+      "NewUserNameClaimDescription": "Claim a new account is named from, for example preferred_username, while the username claim above stays the link key. When set, a sign-in is never matched to an existing account by name.",
       "AvatarUrlFormatLabel": "Postavi format URL-a avatara:",
       "AvatarUrlFormatDescription": "Format URL-a avatara. OIDC claim-ovi mogu se navesti pomoću @{claim_name}, na primer https://example.invalid/@{user_id}.png.",
       "DisableHttpsLabel": "Onemogući OpenID HTTPS otkrivanje (nebezbedno)",
@@ -144,6 +146,15 @@
     "LinkAccount": "Poveži nalog",
     "LinkedIdentities": "Povezani identiteti",
     "NoIdentityLinked": "Nijedan identitet nije povezan sa ovim provajderom.",
-    "NoProvidersConfigured": "Još uvek nema podešenih {0} provajdera."
+    "NoProvidersConfigured": "Još uvek nema podešenih {0} provajdera.",
+    "AppPasswordTitle": "App password",
+    "AppPasswordDescription": "Your account was created by single sign-on. Set a password here to sign in to apps that only take a username and password.",
+    "AppPasswordNew": "New password",
+    "AppPasswordConfirm": "Confirm password",
+    "AppPasswordSave": "Set password",
+    "AppPasswordTooShort": "The password must be at least {0} characters.",
+    "AppPasswordMismatch": "The passwords do not match.",
+    "AppPasswordSaved": "Password set. Use your Jellyfin username and this password in apps.",
+    "AppPasswordFailed": "The password could not be set. Ask an admin for help."
   }
 }

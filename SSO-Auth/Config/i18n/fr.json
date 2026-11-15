@@ -107,6 +107,8 @@
       "DefaultProviderDescription": "Fournisseur d'authentification attribué après la connexion SSO. Laissez vide pour conserver le fournisseur existant. Une valeur courante est Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider.",
       "DefaultUsernameClaimLabel": "Définir le claim de nom d'utilisateur par défaut :",
       "DefaultUsernameClaimDescription": "Claim OpenID utilisé comme nom d'utilisateur Jellyfin. Par défaut preferred_username si non défini.",
+      "NewUserNameClaimLabel": "New account name claim:",
+      "NewUserNameClaimDescription": "Claim a new account is named from, for example preferred_username, while the username claim above stays the link key. When set, a sign-in is never matched to an existing account by name.",
       "AvatarUrlFormatLabel": "Définir le format d'URL d'avatar :",
       "AvatarUrlFormatDescription": "Format d'URL d'avatar. Les claims OIDC peuvent être référencés avec @{nom_du_claim}, par exemple https://example.invalid/@{user_id}.png.",
       "DisableHttpsLabel": "Désactiver la découverte HTTPS OpenID (Non sécurisé)",
@@ -144,6 +146,15 @@
     "LinkAccount": "Lier le compte",
     "LinkedIdentities": "Identités liées",
     "NoIdentityLinked": "Aucune identité liée à ce fournisseur.",
-    "NoProvidersConfigured": "Aucun fournisseur {0} n'est encore configuré."
+    "NoProvidersConfigured": "Aucun fournisseur {0} n'est encore configuré.",
+    "AppPasswordTitle": "App password",
+    "AppPasswordDescription": "Your account was created by single sign-on. Set a password here to sign in to apps that only take a username and password.",
+    "AppPasswordNew": "New password",
+    "AppPasswordConfirm": "Confirm password",
+    "AppPasswordSave": "Set password",
+    "AppPasswordTooShort": "The password must be at least {0} characters.",
+    "AppPasswordMismatch": "The passwords do not match.",
+    "AppPasswordSaved": "Password set. Use your Jellyfin username and this password in apps.",
+    "AppPasswordFailed": "The password could not be set. Ask an admin for help."
   }
 }

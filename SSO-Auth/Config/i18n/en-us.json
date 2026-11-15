@@ -107,6 +107,8 @@
       "DefaultProviderDescription": "Authentication provider assigned after SSO login. Leave blank to keep the existing provider. A common default is Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider.",
       "DefaultUsernameClaimLabel": "Set default username claim:",
       "DefaultUsernameClaimDescription": "OpenID claim used as the Jellyfin username. Defaults to preferred_username when unset.",
+      "NewUserNameClaimLabel": "New account name claim:",
+      "NewUserNameClaimDescription": "Claim a new account is named from, for example preferred_username, while the username claim above stays the link key. When set, a sign-in is never matched to an existing account by name.",
       "AvatarUrlFormatLabel": "Set avatar URL format:",
       "AvatarUrlFormatDescription": "Avatar URL format. OIDC claims can be referenced with @{claim_name}, for example https://example.invalid/@{user_id}.png.",
       "DisableHttpsLabel": "Disable OpenID HTTPS Discovery (Insecure)",
@@ -144,6 +146,15 @@
     "LinkAccount": "Link account",
     "LinkedIdentities": "Linked identities",
     "NoIdentityLinked": "No identity linked to this provider.",
-    "NoProvidersConfigured": "No {0} providers are configured yet."
+    "NoProvidersConfigured": "No {0} providers are configured yet.",
+    "AppPasswordTitle": "App password",
+    "AppPasswordDescription": "Your account was created by single sign-on. Set a password here to sign in to apps that only take a username and password.",
+    "AppPasswordNew": "New password",
+    "AppPasswordConfirm": "Confirm password",
+    "AppPasswordSave": "Set password",
+    "AppPasswordTooShort": "The password must be at least {0} characters.",
+    "AppPasswordMismatch": "The passwords do not match.",
+    "AppPasswordSaved": "Password set. Use your Jellyfin username and this password in apps.",
+    "AppPasswordFailed": "The password could not be set. Ask an admin for help."
   }
 }

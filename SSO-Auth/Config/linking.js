@@ -283,10 +283,77 @@ const ssoConfigLinking = {
   },
 };
 
+const ssoAppPassword = {
+  minimumLength: 8,
+
+  load: (view) => {
+    if (!ApiClient.getCurrentUserId()) return;
+
+    ApiClient.fetch(
+      { type: "GET", url: ApiClient.getUrl("sso/AppPassword/Status") },
+      true,
+    )
+      .then((resp) => resp.json())
+      .then((status) => {
+        if (status && (status.CanSet ?? status.canSet)) {
+          view.querySelector("#sso-app-password-panel").style.display = "";
+        }
+      })
+      .catch((error) => console.warn(error));
+  },
+
+  save: (view) => {
+    const message = view.querySelector("#sso-app-password-message");
+    const password = view.querySelector("#sso-app-password").value;
+    const confirm = view.querySelector("#sso-app-password-confirm").value;
+
+    if (password.length < ssoAppPassword.minimumLength) {
+      message.textContent = ssoI18n.t(
+        "linking.AppPasswordTooShort",
+        ssoAppPassword.minimumLength,
+      );
+      return;
+    }
+
+    if (password !== confirm) {
+      message.textContent = ssoI18n.t("linking.AppPasswordMismatch");
+      return;
+    }
+
+    ApiClient.fetch(
+      {
+        type: "POST",
+        url: ApiClient.getUrl("sso/AppPassword"),
+        data: JSON.stringify({ NewPassword: password }),
+        contentType: "application/json",
+      },
+      true,
+    )
+      .then(() => {
+        view.querySelector("#sso-app-password-form").style.display = "none";
+        message.textContent = ssoI18n.t("linking.AppPasswordSaved");
+      })
+      .catch(async (error) => {
+        let reason = "";
+        try {
+          reason = await error.text();
+        } catch {
+          reason = "";
+        }
+        message.textContent = reason || ssoI18n.t("linking.AppPasswordFailed");
+      });
+  },
+};
+
 export default async function (view) {
   await ssoI18n.load();
   ssoI18n.localize(view);
   ssoConfigLinking.loadProviders(view);
+  ssoAppPassword.load(view);
+
+  view
+    .querySelector("#btn-set-app-password")
+    .addEventListener("click", () => ssoAppPassword.save(view));
 
   view.querySelector("#enable-delete").addEventListener("change", (e) => {
     view.querySelector("#btn-delete-selected-links").disabled =

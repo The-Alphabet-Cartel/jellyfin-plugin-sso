@@ -37,6 +37,12 @@ namespace Jellyfin.Plugin.SSO_Auth.Api;
 [Route("[controller]")]
 public class SSOController : ControllerBase
 {
+    // Jellyfin's own password provider; an account routed here signs in with its stored password.
+    private const string DefaultAuthenticationProviderId = "Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider";
+
+    // Shortest app password the self-service page accepts.
+    private const int MinimumAppPasswordLength = 8;
+
     private readonly IUserManager _userManager;
     private readonly ISessionManager _sessionManager;
     private readonly IAuthorizationContext _authContext;
@@ -166,6 +172,7 @@ public class SSOController : ControllerBase
             }
 
             timedState.Username = AuthorizationEvaluator.ResolveOidcUsername(result.User.Claims, config.DefaultUsernameClaim);
+            timedState.NewUserName = ResolveNewUserName(result.User.Claims, config.NewUserNameClaim);
 
             var oidcRoles = AuthorizationEvaluator.ExtractOidcRoles(result.User.Claims, config.RoleClaim);
             var oidcAuthorization = AuthorizationEvaluator.Evaluate(
@@ -413,7 +420,16 @@ public class SSOController : ControllerBase
             {
                 if (kvp.Value.State.State.Equals(response.Data) && kvp.Value.Valid && StateManager.TryRemove(kvp.Key, out var timedState))
                 {
-                    var provisionedUser = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, timedState.Username, config.EnableAuthorization);
+                    (Guid UserId, bool IsNewUser) provisionedUser;
+                    try
+                    {
+                        provisionedUser = await CreateCanonicalLinkAndUserIfNotExist("oid", provider, timedState.Username, config.EnableAuthorization, timedState.NewUserName).ConfigureAwait(false);
+                    }
+                    catch (SsoProvisioningException ex)
+                    {
+                        _logger.LogWarning("SSO sign-in refused for {Username}: {Reason}", timedState.Username, ex.Message);
+                        return new ContentResult { StatusCode = StatusCodes.Status409Conflict, Content = ex.Message, ContentType = MediaTypeNames.Text.Plain };
+                    }
 
                     var authenticationResult = await Authenticate(
                         provisionedUser.UserId,
@@ -431,6 +447,13 @@ public class SSOController : ControllerBase
                         config.ApplyContentDownloadPermissionOnEveryLogin,
                         provisionedUser.IsNewUser)
                         .ConfigureAwait(false);
+
+                    // Tells the callback page to send a brand-new account to the app-password page.
+                    if (provisionedUser.IsNewUser)
+                    {
+                        Response.Headers["X-SSO-New-User"] = "true";
+                    }
+
                     return Ok(authenticationResult);
                 }
             }
@@ -666,7 +689,7 @@ public class SSOController : ControllerBase
                 }
             }
 
-            var provisionedUser = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID(), config.EnableAuthorization);
+            var provisionedUser = await CreateCanonicalLinkAndUserIfNotExist("saml", provider, samlResponse.GetNameID(), config.EnableAuthorization, null);
 
             var authenticationResult = await Authenticate(
                 provisionedUser.UserId,
@@ -736,7 +759,7 @@ public class SSOController : ControllerBase
         return links;
     }
 
-    private async Task<(Guid UserId, bool IsNewUser)> CreateCanonicalLinkAndUserIfNotExist(string mode, string provider, string canonicalName, bool enableAuthorization)
+    private async Task<(Guid UserId, bool IsNewUser)> CreateCanonicalLinkAndUserIfNotExist(string mode, string provider, string canonicalName, bool enableAuthorization, string newUserName)
     {
         User user = null;
         bool isNewUser = false;
@@ -752,10 +775,15 @@ public class SSOController : ControllerBase
             userId = Guid.Empty;
         }
 
-        // No userId found? Let's try and find the user by name instead
+        // No userId found? Let's try and find the user by name instead. Skipped when a separate
+        // new-account name is configured: an unlinked identity then never takes over an existing
+        // account by name, and a clash is refused below so an admin links it instead.
         if (userId == Guid.Empty)
         {
-            user = _userManager.GetUserByName(canonicalName);
+            if (string.IsNullOrWhiteSpace(newUserName))
+            {
+                user = _userManager.GetUserByName(canonicalName);
+            }
         }
         else
         {
@@ -765,8 +793,14 @@ public class SSOController : ControllerBase
         if (user == null)
         {
             isNewUser = true;
-            _logger.LogInformation($"SSO user {canonicalName} doesn't exist, creating...");
-            user = await _userManager.CreateUserAsync(canonicalName).ConfigureAwait(false);
+            var accountName = string.IsNullOrWhiteSpace(newUserName) ? canonicalName : newUserName;
+            if (!string.IsNullOrWhiteSpace(newUserName) && _userManager.GetUserByName(accountName) != null)
+            {
+                throw new SsoProvisioningException($"A Jellyfin account named '{accountName}' already exists. Ask an admin to link it to your sign-in.");
+            }
+
+            _logger.LogInformation("SSO user {CanonicalName} doesn't exist, creating account {AccountName}", canonicalName, accountName);
+            user = await _userManager.CreateUserAsync(accountName).ConfigureAwait(false);
 
             // Route the account at this controller and seal it before anything else touches it: an
             // account with no stored password accepts the empty one on the ordinary login form. If
@@ -1219,6 +1253,90 @@ public class SSOController : ControllerBase
         return await _sessionManager.AuthenticateDirect(authRequest).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Reports whether the signed-in user may set an app password: only accounts this plugin created,
+    /// which still have the unknown random password they were provisioned with.
+    /// </summary>
+    /// <returns>A JSON object with a <c>CanSet</c> flag.</returns>
+    [Authorize]
+    [HttpGet("AppPassword/Status")]
+    [Produces(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult> AppPasswordStatus()
+    {
+        var auth = await _authContext.GetAuthorizationInfo(Request).ConfigureAwait(false);
+        var user = _userManager.GetUserById(auth.UserId);
+        return Ok(new { CanSet = user != null && IsProvisionedBySso(user) });
+    }
+
+    /// <summary>
+    /// Sets a first password on an account this plugin created, so the member can sign in to apps
+    /// that only take a username and password. Works once: the account then signs in with Jellyfin's
+    /// own password provider, and later changes go through the normal password page.
+    /// </summary>
+    /// <param name="request">The new password.</param>
+    /// <returns>No content on success.</returns>
+    [Authorize]
+    [HttpPost("AppPassword")]
+    [Consumes(MediaTypeNames.Application.Json)]
+    public async Task<ActionResult> SetAppPassword([FromBody] AppPasswordRequest request)
+    {
+        var auth = await _authContext.GetAuthorizationInfo(Request).ConfigureAwait(false);
+        var user = _userManager.GetUserById(auth.UserId);
+        if (user == null || !IsProvisionedBySso(user))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "This account already has a password. Change it from your Jellyfin profile.");
+        }
+
+        var newPassword = request?.NewPassword;
+        if (string.IsNullOrEmpty(newPassword) || newPassword.Length < MinimumAppPasswordLength)
+        {
+            return BadRequest($"The password must be at least {MinimumAppPasswordLength} characters.");
+        }
+
+        var ssoProviderId = user.AuthenticationProviderId;
+
+        // Route the account to the password provider first, so the password change below is stored by it.
+        user.AuthenticationProviderId = DefaultAuthenticationProviderId;
+        await _userManager.UpdateUserAsync(user).ConfigureAwait(false);
+        try
+        {
+            await _userManager.ChangePassword(user.Id, newPassword).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Fail closed: put the account back on SSO-only so the old random password stays the only one.
+            _logger.LogError(ex, "Setting the app password for {Username} failed; account returned to SSO-only sign-in", user.Username);
+            var current = _userManager.GetUserById(user.Id);
+            if (current != null)
+            {
+                current.AuthenticationProviderId = ssoProviderId;
+                await _userManager.UpdateUserAsync(current).ConfigureAwait(false);
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError, "The password could not be set.");
+        }
+
+        _logger.LogInformation("App password set for SSO-created account {Username}", user.Username);
+        return NoContent();
+    }
+
+    private static bool IsProvisionedBySso(User user)
+    {
+        return string.Equals(user.AuthenticationProviderId, typeof(SSOController).FullName, StringComparison.Ordinal);
+    }
+
+    private static string ResolveNewUserName(IEnumerable<System.Security.Claims.Claim> claims, string newUserNameClaim)
+    {
+        if (string.IsNullOrWhiteSpace(newUserNameClaim))
+        {
+            return null;
+        }
+
+        var claimType = newUserNameClaim.Trim();
+        var value = claims?.FirstOrDefault(claim => claim.Type == claimType)?.Value;
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
     private void Invalidate()
     {
         var now = DateTime.Now;
@@ -1345,6 +1463,11 @@ public class TimedAuthorizeState
     /// Gets or sets the user tied to the state.
     /// </summary>
     public string Username { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name a new account should get, when it differs from <see cref="Username"/>.
+    /// </summary>
+    public string NewUserName { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the user is an administrator.

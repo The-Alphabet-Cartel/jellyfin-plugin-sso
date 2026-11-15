@@ -28,6 +28,8 @@ This project has been forked from the [creator's code](https://github.com/9p4/je
 
 > **The Alphabet Cartel build (pbd).** Fork of [k0lin/jellyfin-plugin-sso](https://github.com/k0lin/jellyfin-plugin-sso) with our fixes. Install from `https://raw.githubusercontent.com/The-Alphabet-Cartel/jellyfin-plugin-sso/manifest-release/manifest.json`.
 
+> Fork additions: **New account name claim** (name new accounts from e.g. `preferred_username` while linking by an immutable claim such as `sub`; no take-over of existing accounts by name) and a one-time **app password** on `/SSOViews/linking` for accounts created by SSO.
+
 This plugin allows users to sign in through an SSO provider (such as Google, Microsoft, or your own provider). This enables one-click signin.
 
 https://user-images.githubusercontent.com/17993169/149681516-f93b43f5-fa5c-4c1f-a909-e5414878a864.mp4

@@ -965,6 +965,30 @@
                 <div class="inputContainer">
                   <label
                     class="inputLabel inputLabelUnfocused"
+                    for="NewUserNameClaim"
+                    data-i18n="config.fields.NewUserNameClaimLabel"
+                    >New account name claim:</label
+                  >
+                  <input
+                    is="emby-input"
+                    id="NewUserNameClaim"
+                    type="text"
+                    class="sso-text"
+                  />
+                  <div
+                    class="fieldDescription"
+                    data-i18n="config.fields.NewUserNameClaimDescription"
+                  >
+                    Claim a new account is named from, for example
+                    <code>preferred_username</code>, while the username claim
+                    above stays the link key. When set, a sign-in is never
+                    matched to an existing account by name.
+                  </div>
+                </div>
+
+                <div class="inputContainer">
+                  <label
+                    class="inputLabel inputLabelUnfocused"
                     for="AvatarUrlFormat"
                     data-i18n="config.fields.AvatarUrlFormatLabel"
                     >Set avatar url format</label

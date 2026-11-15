@@ -120,6 +120,66 @@
             </div>
           </section>
 
+          <section
+            id="sso-app-password-panel"
+            class="sso-linking-panel"
+            style="display: none"
+          >
+            <div class="sso-panel-heading">
+              <div>
+                <h3 class="sectionTitle" data-i18n="linking.AppPasswordTitle">
+                  App password
+                </h3>
+                <p
+                  class="sso-linking-copy"
+                  data-i18n="linking.AppPasswordDescription"
+                >
+                  Your account was created by single sign-on. Set a password
+                  here to sign in to apps that only take a username and
+                  password.
+                </p>
+              </div>
+            </div>
+            <div id="sso-app-password-form">
+              <div class="inputContainer">
+                <label
+                  class="inputLabel inputLabelUnfocused"
+                  for="sso-app-password"
+                  data-i18n="linking.AppPasswordNew"
+                  >New password</label
+                >
+                <input
+                  is="emby-input"
+                  id="sso-app-password"
+                  type="password"
+                  autocomplete="new-password"
+                />
+              </div>
+              <div class="inputContainer">
+                <label
+                  class="inputLabel inputLabelUnfocused"
+                  for="sso-app-password-confirm"
+                  data-i18n="linking.AppPasswordConfirm"
+                  >Confirm password</label
+                >
+                <input
+                  is="emby-input"
+                  id="sso-app-password-confirm"
+                  type="password"
+                  autocomplete="new-password"
+                />
+              </div>
+              <button
+                id="btn-set-app-password"
+                type="button"
+                class="raised button-submit emby-button"
+              >
+                <span data-i18n="linking.AppPasswordSave">Set password</span>
+              </button>
+            </div>
+            <p id="sso-app-password-message" class="sso-linking-copy"></p>
+          </section>
+
           <section class="sso-danger-panel">
             <div>
               <h3

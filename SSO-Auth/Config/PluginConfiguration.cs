@@ -344,6 +344,13 @@ public class OidConfig
     public string DefaultUsernameClaim { get; set; }
 
     /// <summary>
+    /// Gets or sets the claim a new account is named from (for example preferred_username), while
+    /// <see cref="DefaultUsernameClaim"/> stays the key the identity is linked by. When set, an
+    /// unlinked identity is never matched to an existing account by name.
+    /// </summary>
+    public string NewUserNameClaim { get; set; }
+
+    /// <summary>
     /// Gets or sets the URL format of the new user avatar.
     /// </summary>
     public string AvatarUrlFormat { get; set; }

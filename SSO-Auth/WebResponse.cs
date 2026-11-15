@@ -495,20 +495,25 @@ async function main() {
 
     var url = '" + punycodeBaseUrl + "/sso/" + mode + "/Auth/" + provider + @"';
 
-    let response = await new Promise(resolve => {
+    let reply = await new Promise(resolve => {
        var xhr = new XMLHttpRequest();
        xhr.open('POST', url, true);
        xhr.setRequestHeader('Content-Type', 'application/json');
        xhr.setRequestHeader('Accept', 'application/json');
        xhr.onload = function(e) {
-         resolve(xhr.response);
+         resolve({ status: xhr.status, body: xhr.response, newUser: xhr.getResponseHeader('X-SSO-New-User') === 'true' });
        };
        xhr.onerror = function () {
-         resolve(undefined);
+         resolve({ status: 0, body: '', newUser: false });
        };
        xhr.send(JSON.stringify(request));
     })
-    var responseJson = JSON.parse(response);
+    if (reply.status !== 200) {
+        // Show the server's reason (for example an account-name clash) instead of a blank page.
+        document.body.innerText = reply.body || 'Sign-in failed. Ask an admin for help.';
+        return;
+    }
+    var responseJson = JSON.parse(reply.body);
     var userId = 'user-' + responseJson['User']['Id'] + '-' + responseJson['User']['ServerId'];
     responseJson['User']['EnableAutoLogin'] = true;
     localStorage.setItem(userId, JSON.stringify(responseJson['User']));
@@ -517,7 +522,8 @@ async function main() {
     jfCreds['Servers'][0]['UserId'] = responseJson['User']['Id'];
     localStorage.setItem('jellyfin_credentials', JSON.stringify(jfCreds));
     localStorage.setItem('enableAutoLogin', 'true');
-    window.location.replace('" + punycodeBaseUrl + @"/web/index.html');
+    // A brand-new account goes to the self-service page first, to set a password for apps.
+    window.location.replace(reply.newUser ? '" + punycodeBaseUrl + @"/SSOViews/linking' : '" + punycodeBaseUrl + @"/web/index.html');
 }
 
 document.addEventListener('DOMContentLoaded', function () {
