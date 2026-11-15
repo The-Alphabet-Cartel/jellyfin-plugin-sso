@@ -8,6 +8,14 @@
     "owner": "The-Alphabet-Cartel",
     "versions": [
       {
+        "changelog": "Fix self-service account linking creating a new user instead of linking.",
+        "checksum": "ee82c0cbef80f335d533d8dee2310108",
+        "sourceUrl": "https://github.com/The-Alphabet-Cartel/jellyfin-plugin-sso/releases/download/v5.1.1.1/sso-authentication-pbd_5.1.1.1.zip",
+        "targetAbi": "12.0.0.0",
+        "timestamp": "2026-11-15T18:00:31Z",
+        "version": "5.1.1.1"
+      },
+      {
         "changelog": "Nightly build\n",
         "checksum": "a33f6bde011b3920e25f3b1fd92215f6",
         "sourceUrl": "https://github.com/The-Alphabet-Cartel/jellyfin-plugin-sso/releases/download/nightly/sso-authentication-pbd_0.0.0.9000.zip",
