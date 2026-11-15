@@ -424,17 +424,20 @@ const sleep = (milliseconds) => {
         var punycodeBaseUrl = protocol + punycodeDomain;
 
         return Base + @"
-async function link(request) {
-    const jfCredentialsString = localStorage.getItem(""jellyfin_credentials"");
-
-    if (jfCredentialsString == null) return;
+// Links the signed-in Jellyfin user to the provider identity. The credentials
+// are passed in because main() must clear them from localStorage (Safari cache
+// workaround) before the iframe loads; reading them here afterwards always
+// found them gone, so linking silently did nothing and the page fell through
+// to an SSO login that created a new user. Resolves true only on a 2xx reply.
+async function link(request, jfCredentialsString) {
+    if (jfCredentialsString == null) return false;
 
     const jfCredentials = JSON.parse(jfCredentialsString);
     const jfUser = jfCredentials['Servers'][0]['UserId'];
     const jfToken = jfCredentials['Servers'][0]['AccessToken'];
 
-    if (jfUser == null) return;
-    if (jfToken == null) return;
+    if (jfUser == null) return false;
+    if (jfToken == null) return false;
 
     const url = '" + $"{punycodeBaseUrl}/sso/{mode}/Link/{provider}/" + @"' + jfUser;
 
@@ -449,17 +452,19 @@ async function link(request) {
             `MediaBrowser Client=""${request.appName}"",Device=""${request.deviceName}"",DeviceId=""${request.deviceId}"",Version=""${request.appVersion}"",Token=""${jfToken}""`)
 
        xhr.onload = function(e) {
-         resolve(xhr.response);
+         resolve(xhr.status >= 200 && xhr.status < 300);
        };
        xhr.onerror = function (e) {
          console.log(e);
-         resolve(undefined);
+         resolve(false);
        };
        xhr.send(JSON.stringify(request));
     })
 }
 
 async function main() {
+    // Keep the signed-in user's credentials for link() before clearing them.
+    const savedCredentials = localStorage.getItem('jellyfin_credentials');
     localStorage.removeItem('jellyfin_credentials');
     document.getElementById('iframe-main').src = '" + punycodeBaseUrl + @"/web/index.html';
 
@@ -477,7 +482,16 @@ async function main() {
 
     var request = {deviceId, appName, appVersion, deviceName, data};
 
-    if (" + $"{isLinking}".ToLower() + @") await link(request);
+    if (" + $"{isLinking}".ToLower() + @") {
+        const linked = await link(request, savedCredentials);
+        if (!linked) {
+            // Never fall through to a plain SSO login here: with no link it
+            // would create a brand-new user instead of linking this one.
+            if (savedCredentials != null) localStorage.setItem('jellyfin_credentials', savedCredentials);
+            document.body.innerText = 'Linking failed: sign in to Jellyfin first, then try linking again.';
+            return;
+        }
+    }
 
     var url = '" + punycodeBaseUrl + "/sso/" + mode + "/Auth/" + provider + @"';
 
