@@ -14,6 +14,12 @@ namespace Jellyfin.Plugin.SSO_Auth;
 public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
 {
     /// <summary>
+    /// Fixed prefix for the plugin's web page ids. Kept as upstream's "SSO-Auth" so the
+    /// config and linking pages keep their URLs while the displayed name marks this fork.
+    /// </summary>
+    private const string PagePrefix = "SSO-Auth";
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="SSOPlugin"/> class.
     /// </summary>
     /// <param name="applicationPaths">Internal Jellyfin interface for the ApplicationPath.</param>
@@ -32,7 +38,7 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
     /// <summary>
     /// Gets the name of the SSO plugin.
     /// </summary>
-    public override string Name => "SSO-Auth";
+    public override string Name => "SSO-Auth (pbd)";
 
     /// <summary>
     /// Gets the GUID of the SSO plugin.
@@ -49,42 +55,42 @@ public class SSOPlugin : BasePlugin<PluginConfiguration>, IPlugin, IHasWebPages
         {
             new PluginPageInfo
             {
-                Name = Name,
+                Name = PagePrefix,
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.configPage.html"
             },
             new PluginPageInfo
             {
-                Name = Name + ".js",
+                Name = PagePrefix + ".js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.config.js"
             },
             new PluginPageInfo
             {
-                Name = Name + ".css",
+                Name = PagePrefix + ".css",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.style.css"
             },
             new PluginPageInfo
             {
-                Name = Name + "-linking",
+                Name = PagePrefix + "-linking",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.html"
             },
             new PluginPageInfo
             {
-                Name = Name + "-linking.js",
+                Name = PagePrefix + "-linking.js",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.linking.js"
             },
             new PluginPageInfo
             {
-                Name = Name + "-i18n-en-us.json",
+                Name = PagePrefix + "-i18n-en-us.json",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.i18n.en-us.json"
             },
             new PluginPageInfo
             {
-                Name = Name + "-i18n-fr.json",
+                Name = PagePrefix + "-i18n-fr.json",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.i18n.fr.json"
             },
             new PluginPageInfo
             {
-                Name = Name + "-i18n-sr.json",
+                Name = PagePrefix + "-i18n-sr.json",
                 EmbeddedResourcePath = $"{GetType().Namespace}.Config.i18n.sr.json"
             },
         };

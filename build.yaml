@@ -1,20 +1,22 @@
-name: "SSO Authentication"
+name: "SSO Authentication (pbd)"
 guid: "505ce9d1-d916-42fa-86ca-673ef241d7df"
-imageUrl: "https://raw.githubusercontent.com/k0lin/jellyfin-plugin-sso/main/img/png/logo-single-color.png"
-version: "5.1.1"
+imageUrl: "https://raw.githubusercontent.com/The-Alphabet-Cartel/jellyfin-plugin-sso/main/img/png/logo-single-color.png"
+version: "5.1.1.1"
 targetAbi: "12.0.0.0"
 framework: "net10.0"
-owner: "k0lin"
+owner: "The-Alphabet-Cartel"
 overview: "Authenticate users against an SSO provider."
 description: |
   This plugin allows users to sign in through an SSO provider (such as Google, Facebook, or your own provider). This enables one-click signin.
-  Review documentation at https://github.com/k0lin/jellyfin-plugin-sso
+  The Alphabet Cartel build (pbd) of k0lin/jellyfin-plugin-sso.
+  Review documentation at https://github.com/The-Alphabet-Cartel/jellyfin-plugin-sso
 category: "Authentication"
 artifacts:
   - "SSO-Auth.dll"
   - "Duende.IdentityModel.OidcClient.dll"
   - "Duende.IdentityModel.dll"
 changelog: |
+  5.1.1.1 (pbd): Fix account linking from the self-service page: the callback page cleared the saved Jellyfin sign-in before linking, so linking silently did nothing and an SSO login created a new user instead. Linking now uses the saved sign-in and stops with an error if it fails.
   5.1.1: Fix the "local manifest version ... was expected" warning on Jellyfin 12: the packaged meta.json now carries the same 3-segment version as the repository manifest
   5.1.0: Jellyfin 12 support: .NET 10, Jellyfin 12.0.0 packages, modern Authorization header for the account linking flow
   5.0.0.0: Full redesign of configuration and linking UI, i18n support, RBAC controls in UI
